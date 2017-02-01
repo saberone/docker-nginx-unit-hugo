@@ -1,14 +1,16 @@
-# NGINX Host Hugo Unit [![Docker Pulls](https://img.shields.io/docker/pulls/handcraftedbits/nginx-unit-hugo.svg?maxAge=2592000)](https://hub.docker.com/r/handcraftedbits/nginx-unit-hugo)
+# NGINX Host Hugo Unit 
 
 A [Docker](https://www.docker.com) container that provides a [Hugo](https://gohugo.io) unit for
 [NGINX Host](https://github.com/handcraftedbits/docker-nginx-host).  This unit **only** supports Hugo sites that
 are available via a remote source control repository.
 
+This fork has been made to make it possible to use webhooks from a Gitlab repository.
+
 # Features
 
 * Hugo v0.18.1
 
-* Can automatically regenerate your Hugo site upon a push to your [GitHub](https://github.com) repository
+* Can automatically regenerate your Hugo site upon a push to your [Gitlab](https://gitlab.com) or self hosted repository
 
 # Usage
 
@@ -100,10 +102,10 @@ approach, if the theme is available in its own Git repository, is to use a
 git submodule add user@myrepo.com:my_theme my_theme
 ```
 
-### Enabling Site Regeneration After GitHub Push
+### Enabling Site Regeneration After Gitlab Push
 
-If your content repository is stored in GitHub, your Hugo site can be automatically regenerated after a push.  Simply
-[create a GitHub webhook](https://developer.github.com/webhooks/creating/) for your repository with the URL
+If your content repository is stored in Gitlab, your Hugo site can be automatically regenerated after a push.  Simply
+[Gitlab webhooks](https://gitlab.com/help/web_hooks/web_hooks/) for your repository with the URL
 
 `https://<host>/<prefix>/rebuild`
 
@@ -146,7 +148,7 @@ alternative, making sure to add the appropriate environment variables and volume
 
 ## Environment Variables
 
-### `HUGO_GITHUB_SECRET`
+### `HUGO_GITLAB_SECRET`
 
 The secret value used when setting up the Hugo site rebuild webhook on GitHub.
 

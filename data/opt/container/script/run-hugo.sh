@@ -68,7 +68,7 @@ cp /opt/container/template/webhooks.json.template ${webhook_config}
 cp /opt/container/template/on-webhook-triggered.sh.template ${webhook_script}
 chmod +x ${webhook_script}
 
-fileSubstitute ${webhook_config} HUGO_GITHUB_SECRET ${HUGO_GITHUB_SECRET}
+fileSubstitute ${webhook_config} HUGO_GITLAB_SECRET ${HUGO_GITLAB_SECRET}
 fileSubstitute ${webhook_script} HUGO_THEME ${HUGO_THEME}
 fileSubstitute ${webhook_script} HUGO_BASE_URL https://${NGINX_UNIT_HOSTS}${normalized_prefix}
 fileSubstitute ${webhook_script} repo_dir `basename ${repo_dir}`

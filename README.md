@@ -7,6 +7,7 @@ are available via a remote source control repository.
 # Features
 
 * Hugo v0.18.1
+
 * Can automatically regenerate your Hugo site upon a push to your [GitHub](https://github.com) repository
 
 # Usage
@@ -35,8 +36,8 @@ hugo:
   environment:
     - NGINX_UNIT_HOSTS=mysite.com
     - NGINX_URL_PREFIX=/blog
-    - HUGO_GITHUB_SECRET=password
-    - HUGO_REPO_URL=https://github.com/mysite/blog.git
+    - HUGO_GITLAB_SECRET=password
+    - HUGO_REPO_URL=https://gitlab.com/username/blog.git
     - HUGO_THEME=my_hugo_theme
   volumes_from:
     - data
@@ -64,8 +65,8 @@ services:
     environment:
       - NGINX_UNIT_HOSTS=mysite.com
       - NGINX_URL_PREFIX=/blog
-      - HUGO_GITHUB_SECRET=password
-      - HUGO_REPO_URL=https://github.com/mysite/blog.git
+      - HUGO_GITLAB_SECRET=password
+      - HUGO_REPO_URL=https://gitlab.com/username/blog.git
       - HUGO_THEME=my_hugo_theme
     volumes_from:
       - data
@@ -112,8 +113,8 @@ For example, if the blog is hosted at `https://mysite.com/`, then the webhook UR
 `https://mysite.com/webhooks-hugo/rebuild`; if the blog is hosted at `https://mysite.com/blog` (i.e.,
 `NGINX_URL_PREFIX` is set to `/blog`), the webhook URL will be `https://mysite.com/webhooks-blog/rebuild`.
 
-You will also need to set the environment variable `HUGO_GITHUB_SECRET` to the secret value specified during
-configuration of the webhook in GitHub.
+You will also need to set the environment variable `HUGO_GITLAB_SECRET` to the secret token value specified during
+configuration of the webhook in GitLab.
 
 ### Post-build Script
 
@@ -126,8 +127,8 @@ hugo:
   environment:
     - NGINX_UNIT_HOSTS=mysite.com
     - NGINX_URL_PREFIX=/blog
-    - HUGO_GITHUB_SECRET=password
-    - HUGO_REPO_URL=https://github.com/mysite/blog.git
+    - HUGO_GITLAB_SECRET=password
+    - HUGO_REPO_URL=https://gitlab.com/username/blog.git
     - HUGO_THEME=my_hugo_theme
   volumes:
     - /home/me/my-post-build-script.sh:/opt/container/script/post-hugo-build.sh

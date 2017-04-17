@@ -8,7 +8,9 @@ This fork has been made to make it possible to use webhooks from a Gitlab reposi
 
 # Features
 
-* Hugo v0.18.1
+* Hugo v0.19
+* Can automatically regenerate your Hugo site upon a push to your [GitHub](https://github.com) or
+  [GitLab](https://gitlab.com) repository
 
 * Can automatically regenerate your Hugo site upon a push to your [Gitlab](https://gitlab.com) or self hosted repository
 
@@ -38,40 +40,39 @@ hugo:
   environment:
     - NGINX_UNIT_HOSTS=mysite.com
     - NGINX_URL_PREFIX=/blog
-    - HUGO_GITLAB_SECRET=password
-    - HUGO_REPO_URL=https://gitlab.com/username/blog.git
+    - HUGO_REPO_URL=https://github.com/mysite/blog.git
+    - HUGO_REPO_SECRET=password
     - HUGO_THEME=my_hugo_theme
-  volumes_from:
-    - data
+  volumes:
+    - data:/opt/container/shared
 ```
 
 Observe the following:
 
 * Several environment variables are used to configure Hugo.  See the
   [environment variable reference](#reference) for additional information.
-* As with any other NGINX Host unit, we mount the volumes from our
-  [NGINX Host data container](https://github.com/handcraftedbits/docker-nginx-host-data), in this case named `data`.
+* As with any other NGINX Host unit, we mount our data volume, in this case named `data`, to `/opt/container/shared`.
 
 Finally, we need to create a link in our NGINX Host container to the `hugo` container in order to host Hugo.  Here is
 our final `docker-compose.yml` file:
 
 ```yaml
-version: '2'
+version: "2.1"
+
+volumes:
+  data:
 
 services:
-  data:
-    image: handcraftedbits/nginx-host-data
-
   hugo:
     image: handcraftedbits/nginx-unit-hugo
     environment:
       - NGINX_UNIT_HOSTS=mysite.com
       - NGINX_URL_PREFIX=/blog
-      - HUGO_GITLAB_SECRET=password
-      - HUGO_REPO_URL=https://gitlab.com/username/blog.git
+      - HUGO_REPO_URL=https://github.com/mysite/blog.git
+      - HUGO_REPO_SECRET=password
       - HUGO_THEME=my_hugo_theme
-    volumes_from:
-      - data
+    volumes:
+      - data:/opt/container/shared
 
   proxy:
     image: handcraftedbits/nginx-host
@@ -80,10 +81,9 @@ services:
     ports:
       - "443:443"
     volumes:
+      - data:/opt/container/shared
       - /etc/letsencrypt:/etc/letsencrypt
       - /home/me/dhparam.pem:/etc/ssl/dhparam.pem
-    volumes_from:
-      - data
 ```
 
 This will result in making Hugo available at `https://mysite.com/blog`.
@@ -98,14 +98,15 @@ The easiest way to store your themes alongside your content is to simply copy th
 approach, if the theme is available in its own Git repository, is to use a
 [Git submodule](https://git-scm.com/docs/git-submodule), for example:
 
-```sh
-git submodule add user@myrepo.com:my_theme my_theme
+```bash
+git submodule add user@myrepo.com:my_theme themes/my_theme
 ```
 
-### Enabling Site Regeneration After Gitlab Push
+### Enabling Site Regeneration After Git Repository Push
 
-If your content repository is stored in Gitlab, your Hugo site can be automatically regenerated after a push.  Simply
-[Gitlab webhooks](https://gitlab.com/help/web_hooks/web_hooks/) for your repository with the URL
+If your content repository is stored in GitHub or GitLab, your Hugo site can be automatically regenerated after a push.
+Simply [create a GitHub webhook](https://developer.github.com/webhooks/creating/) or a
+[GitLab webhook](https://docs.gitlab.com/ce/user/project/integrations/webhooks.html) for your repository with the URL
 
 `https://<host>/<prefix>/rebuild`
 
@@ -115,8 +116,29 @@ For example, if the blog is hosted at `https://mysite.com/`, then the webhook UR
 `https://mysite.com/webhooks-hugo/rebuild`; if the blog is hosted at `https://mysite.com/blog` (i.e.,
 `NGINX_URL_PREFIX` is set to `/blog`), the webhook URL will be `https://mysite.com/webhooks-blog/rebuild`.
 
-You will also need to set the environment variable `HUGO_GITLAB_SECRET` to the secret token value specified during
-configuration of the webhook in GitLab.
+You will also need to set the environment variable `HUGO_REPO_SECRET` to the secret value specified during
+configuration of the webhook in GitHub or GitLab.
+
+### Pre-build Script
+
+You can run a pre-build script (for example, to copy resources before Hugo generates your site) by attaching a file to
+the `/opt/container/script/pre-hugo-build.sh` volume, for example:
+
+```yaml
+hugo:
+  image: handcraftedbits/nginx-unit-hugo
+  environment:
+    - NGINX_UNIT_HOSTS=mysite.com
+    - NGINX_URL_PREFIX=/blog
+    - HUGO_REPO_URL=https://github.com/mysite/blog.git
+    - HUGO_REPO_SECRET=password
+    - HUGO_THEME=my_hugo_theme
+  volumes:
+    - data:/opt/container/shared
+    - /home/me/my-pre-build-script.sh:/opt/container/script/pre-hugo-build.sh
+```
+
+The directory where your Hugo repository has been cloned will be provided to this script as the first argument.
 
 ### Post-build Script
 
@@ -129,14 +151,15 @@ hugo:
   environment:
     - NGINX_UNIT_HOSTS=mysite.com
     - NGINX_URL_PREFIX=/blog
-    - HUGO_GITLAB_SECRET=password
-    - HUGO_REPO_URL=https://gitlab.com/username/blog.git
+    - HUGO_REPO_URL=https://github.com/mysite/blog.git
+    - HUGO_REPO_SECRET=password
     - HUGO_THEME=my_hugo_theme
   volumes:
+    - data:/opt/container/shared
     - /home/me/my-post-build-script.sh:/opt/container/script/post-hugo-build.sh
-  volumes_from:
-    - data
 ```
+
+The directory where your Hugo repository has been cloned will be provided to this script as the first argument.
 
 ## Running the NGINX Host Hugo Unit
 
@@ -148,11 +171,11 @@ alternative, making sure to add the appropriate environment variables and volume
 
 ## Environment Variables
 
-### `HUGO_GITLAB_SECRET`
+### `HUGO_IGNORE_CACHE`
 
-The secret value used when setting up the Hugo site rebuild webhook on GitHub.
+Used to ignore Hugo's cache directory (i.e., calls Hugo with the `--ignoreCache` parameter) if set to `true`.
 
-**Required**
+**Default value**: `false`
 
 ### `HUGO_REPO_BRANCH`
 
@@ -160,11 +183,17 @@ The branch of the Git repository hosting your Hugo site.
 
 **Default value**: `master`
 
+### `HUGO_REPO_SECRET`
+
+The secret value used when setting up the Hugo site rebuild webhook on GitHub or GitLab.
+
+**Required**
+
 ### `HUGO_REPO_URL`
 
 The URL of the Git repository hosting your Hugo site.
 
-**Required**
+**Required** if your Git repository is hosted on GitHub or GitLab.
 
 ### `HUGO_THEME`
 

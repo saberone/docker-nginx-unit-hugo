@@ -81,18 +81,25 @@ webhook_script=/opt/container/script/on-webhook-triggered.sh
 
 # Figure out which Git host we're using based on the hostname.
 
-repo_type=`echo ${HUGO_REPO_URL} | cut -d"/" -f3`
 
-if [ `echo ${repo_type} | grep -i "github.com"` ]
+if [ -z "${HUGO_REPO_TYPE}" ]
 then
-     repo_type=github
-elif [ `echo ${repo_type} | grep -i "gitlab.com"` ]
-then
-     repo_type=gitlab
+
+	repo_type=`echo ${HUGO_REPO_URL} | cut -d"/" -f3`
+
+	if [ `echo ${repo_type} | grep -i "github.com"` ]
+	then
+     		repo_type=github
+	elif [ `echo ${repo_type} | grep -i "gitlab.com"` ]
+	then
+     		repo_type=gitlab
+	else
+     		logWarning "unable to determine Git repository type for repository URL '${HUGO_REPO_URL}'; automatic update not supported"
+
+     		repo_type=
+	fi
 else
-     logWarning "unable to determine Git repository type for repository URL '${HUGO_REPO_URL}'; automatic update not supported"
-
-     repo_type=
+	repo_type=${HUGO_REPO_TYPE}
 fi
 
 if [ ! -z "${repo_type}" ]

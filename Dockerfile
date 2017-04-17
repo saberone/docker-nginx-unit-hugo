@@ -1,5 +1,5 @@
 FROM handcraftedbits/nginx-unit-webhook:2.6.2-1
-MAINTAINER HandcraftedBits <opensource@handcraftedbits.com>
+MAINTAINER saberone <saberone@gmail.com> 
 
 ARG HUGO_VERSION=v0.19
 

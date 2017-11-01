@@ -1,4 +1,4 @@
-FROM handcraftedbits/nginx-unit-webhook:2.6.2-1
+FROM handcraftedbits/nginx-unit-webhook:latest
 MAINTAINER saberone <saberone@gmail.com> 
 
 ARG HUGO_VERSION=v0.19
